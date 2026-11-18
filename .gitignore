@@ -1,0 +1,25 @@
+node_modules/
+dist/
+build/
+coverage/
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# Runtime data
+uploads/
+backups/
+logs/
+*.log
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Test artifacts
+.test-uploads/
+.test-backups/

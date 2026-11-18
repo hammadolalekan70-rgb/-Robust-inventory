@@ -1,0 +1,48 @@
+services:
+  - type: web
+    name: robust-warehouse-inventory
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci --include=dev && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_VERSION
+        value: 22
+      - key: NODE_ENV
+        value: production
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: SESSION_TTL_HOURS
+        value: 8
+      - key: COOKIE_SECURE
+        value: true
+      - key: TRUST_PROXY
+        value: 1
+      - key: TZ
+        value: Africa/Lagos
+      - key: CURRENCY
+        value: NGN
+      - key: RATE_LIMIT_DISABLED
+        value: false
+      - key: APP_BASE_URL
+        sync: false
+      - key: CLIENT_ORIGINS
+        sync: false
+      - key: MONGODB_URI
+        sync: false
+      - key: DASHBOARD_UNLOCK_CODE
+        sync: false
+      - key: SMTP_HOST
+        sync: false
+      - key: SMTP_PORT
+        value: 587
+      - key: SMTP_SECURE
+        value: false
+      - key: SMTP_USER
+        sync: false
+      - key: SMTP_PASS
+        sync: false
+      - key: MAIL_FROM
+        sync: false

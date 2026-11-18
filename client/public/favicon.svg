@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="Robust Warehouse">
+  <title>Robust Warehouse</title>
+  <!-- Badge -->
+  <rect x="0" y="0" width="64" height="64" rx="14" fill="#0E2E4A"/>
+  <!-- R stem -->
+  <path d="M12 11 H25 V53 H12 Z" fill="#FFFFFF"/>
+  <!-- R bowl -->
+  <path d="M25 11 H38 C47 11 52 16.5 52 24 C52 30.5 47.5 35 40.5 35 H25 Z" fill="#FFFFFF"/>
+  <!-- R leg -->
+  <path d="M33 32 H43 L54 53 H41 Z" fill="#FFFFFF"/>
+  <!-- Crate (counter) -->
+  <path d="M25 20 H35.5 C40 20 42.5 22.2 42.5 25 C42.5 27.8 40 30 35.5 30 H25 Z" fill="#F2A007"/>
+</svg>
