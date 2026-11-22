@@ -323,8 +323,8 @@ export default function Dashboard() {
                     <AreaChart data={daily} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
                       <defs>
                         <linearGradient id="spendFill" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="0%" stopColor="#F2A007" stopOpacity={0.35} />
-                          <stop offset="100%" stopColor="#F2A007" stopOpacity={0.02} />
+                          <stop offset="0%" stopColor="#F59E0B" stopOpacity={0.35} />
+                          <stop offset="100%" stopColor="#F59E0B" stopOpacity={0.02} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
@@ -347,10 +347,10 @@ export default function Dashboard() {
                       <Area
                         type="monotone"
                         dataKey="totalKobo"
-                        stroke="#0E2E4A"
+                        stroke="#142B45"
                         strokeWidth={2.5}
                         fill="url(#spendFill)"
-                        activeDot={{ r: 4, fill: '#F2A007', stroke: '#0E2E4A', strokeWidth: 2 }}
+                        activeDot={{ r: 4, fill: '#F59E0B', stroke: '#142B45', strokeWidth: 2 }}
                       />
                     </AreaChart>
                   </ResponsiveContainer>

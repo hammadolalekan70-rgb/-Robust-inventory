@@ -337,7 +337,7 @@ export default function Reports() {
                       width={64}
                     />
                     <Tooltip content={<ChartTooltip />} />
-                    <Bar dataKey="totalKobo" fill="#0E2E4A" radius={[4, 4, 0, 0]} maxBarSize={42} />
+                    <Bar dataKey="totalKobo" fill="#142B45" radius={[4, 4, 0, 0]} maxBarSize={42} />
                   </BarChart>
                 </ResponsiveContainer>
               ) : (

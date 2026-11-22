@@ -2,12 +2,37 @@
 
 The application sends two kinds of mail: a **6-digit sign-in code** after a correct password, and a
 **password reset** link. Sign-in codes expire after 10 minutes, are single use and allow at most five
-attempts. User creation and password changes done by a boss do not send email. If SMTP is not configured,
-both flows still work in development by printing the message to the server console.
+attempts. User creation and password changes done by a boss do not send email. If no email provider is
+configured, both flows still work in development by printing the message to the server console.
+
+Two providers are supported: **Resend** (HTTPS API) and **SMTP**. Resend takes priority when configured.
 
 ---
 
-## Gmail setup (recommended for a single warehouse)
+## Resend (recommended when SMTP ports are blocked)
+
+Some hosts block outbound SMTP. In particular, **Render free web services block ports 25, 465 and 587**,
+so Gmail SMTP hangs and sign-in never completes. Resend uses HTTPS on port 443, which is not blocked.
+
+1. Create a free account at <https://resend.com>.
+2. Verify a sending domain in Resend (or use `onboarding@resend.dev` for testing; it can only send to
+   the email address that owns the Resend account).
+3. Create an API key at <https://resend.com/api-keys>.
+4. Configure:
+
+```dotenv
+RESEND_API_KEY=re_your_api_key
+RESEND_FROM="Robust Warehouse Inventory <no-reply@yourdomain.com>"
+```
+
+`RESEND_FROM` must be an address on a domain verified in Resend. If it is empty, `MAIL_FROM` is used.
+Restart the API after changing the variables.
+
+When `RESEND_API_KEY` is set, Resend is used for every email and the `SMTP_*` settings are ignored.
+
+---
+
+## Gmail setup (for a VPS or paid host)
 
 Gmail requires an **App Password**; normal account passwords cannot be used by SMTP clients.
 
@@ -71,11 +96,14 @@ credentials (not IAM access keys).
 | `SMTP_USER` | SMTP username / account email |
 | `SMTP_PASS` | App password / API key |
 | `MAIL_FROM` | From header; use `"Name <address>"` |
-| `MAIL_DEV_CONSOLE_FALLBACK` | When SMTP is absent, log the reset link instead of failing (development only) |
+| `RESEND_API_KEY` | Resend API key; enables the HTTPS email API |
+| `RESEND_FROM` | Verified Resend sender; defaults to `MAIL_FROM` |
+| `MAIL_DEV_CONSOLE_FALLBACK` | When no provider is configured, log the message instead of failing (development only) |
 | `APP_BASE_URL` | Origin used to build the reset link; must be the public URL in production |
 | `RESET_TOKEN_TTL_MINUTES` | Link lifetime (default 30) |
 
-Mail is considered configured only when `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS` are all set.
+Email is considered configured when `RESEND_API_KEY` is set, or when `SMTP_HOST`, `SMTP_USER` and
+`SMTP_PASS` are all set. Resend wins when both are configured.
 
 ### Reset link
 
@@ -104,18 +132,18 @@ Requesting a new reset invalidates the previous link for that user.
 
 ### Development fallback
 
-With no SMTP configured and `MAIL_DEV_CONSOLE_FALLBACK=true` (non-production), the API logs:
+With no email provider configured and `MAIL_DEV_CONSOLE_FALLBACK=true` (non-production), the API logs:
 
 ```
-[email:dev] SMTP not configured. Message not sent.
+[email:dev] Email is not configured. Message not sent.
   To: boss@example.com
   Subject: Reset your Robust Warehouse Inventory password
   Body:
   … https://localhost:5173/reset-password?token=…
 ```
 
-Copy the link into a browser. The fallback is disabled in production, where a missing SMTP configuration
-logs an error and no email is sent (the API still returns the generic success message).
+Copy the link into a browser. The fallback is disabled in production, where a missing configuration logs
+an error and no email is sent (the API still returns the generic success message).
 
 ---
 
@@ -166,10 +194,12 @@ installed.
 | --- | --- |
 | `535-5.7.8 Username and Password not accepted` | Use a Gmail **App Password**, not the account password. Regenerate it and remove spaces. |
 | `Invalid login: 534-5.7.9 Application-specific password required` | 2-Step Verification is off or an app password is required. |
-| `ETIMEDOUT` / `ECONNREFUSED` | Host/port blocked by the network or firewall. Try 465 with `SMTP_SECURE=true`. |
+| `ETIMEDOUT` / `ECONNREFUSED` | Host/port blocked by the network or firewall. On Render free, use `RESEND_API_KEY`; elsewhere try 465 with `SMTP_SECURE=true`. |
+| Sign-in button spins for minutes | SMTP connection is hanging. Check logs for `Failed to send sign-in code`; on Render free, SMTP ports are blocked. |
 | `self-signed certificate` | Corporate SMTP proxy; use a trusted endpoint or ask IT. |
-| Email lands in spam | Use a domain sender with SPF/DKIM, keep `MAIL_FROM` aligned with the SMTP account, avoid spammy subjects. |
+| `Resend: ...` error | Check `RESEND_API_KEY` and that `RESEND_FROM` uses a domain verified in Resend. |
+| Email lands in spam | Use a domain sender with SPF/DKIM, keep `MAIL_FROM` aligned with the sending account, avoid spammy subjects. |
 | Link points to localhost in production | Fix `APP_BASE_URL` and restart the API. |
 | Link says invalid/expired | Tokens last 30 minutes and are single-use; request a new one. |
-| No email, generic success shown | Check server logs for SMTP errors and whether the account exists and is active. |
-| Reset link logged in production | `MAIL_DEV_CONSOLE_FALLBACK` should be `false`; configure SMTP instead. |
+| No email, generic success shown | Check server logs for email errors and whether the account exists and is active. |
+| Reset link logged in production | `MAIL_DEV_CONSOLE_FALLBACK` should be `false`; configure Resend or SMTP instead. |

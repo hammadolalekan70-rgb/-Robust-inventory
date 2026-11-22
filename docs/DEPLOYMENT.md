@@ -16,7 +16,7 @@ The app is deliberately a single Node process: it serves the React build and the
 - [ ] `COOKIE_SECURE=true`, `TRUST_PROXY=1` (behind one Nginx hop)
 - [ ] `SESSION_TTL_HOURS` reviewed (default 8)
 - [ ] `npm run build` completed and `client/dist` present
-- [ ] SMTP configured and tested (sign-in codes and password resets)
+- [ ] Email delivery configured and tested (Resend or SMTP) for sign-in codes and password resets
 - [ ] MongoDB listens on localhost only / firewall restricted
 - [ ] TLS certificate installed; HTTP redirects to HTTPS
 - [ ] Health check monitored (`/api/health`)
@@ -77,7 +77,13 @@ SMTP_USER=you@example.com
 SMTP_PASS=<app password>
 MAIL_FROM="Robust Warehouse Inventory <you@example.com>"
 
+# Or use Resend over HTTPS instead of SMTP (recommended on hosts that block SMTP ports)
+# RESEND_API_KEY=re_your_api_key
+# RESEND_FROM="Robust Warehouse Inventory <no-reply@yourdomain.com>"
 ```
+
+> Render free web services block outbound SMTP ports 25, 465 and 587. Use Resend there, or upgrade to a
+> paid instance. See [EMAIL.md](EMAIL.md).
 
 Build and create the boss:
 

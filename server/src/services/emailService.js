@@ -4,6 +4,8 @@ import { logger } from '../lib/logger.js';
 
 let transporter = null;
 
+const RESEND_TIMEOUT_MS = 15000;
+
 function getTransporter() {
   if (!config.smtp.configured) return null;
   if (!transporter) {
@@ -11,28 +13,77 @@ function getTransporter() {
       host: config.smtp.host,
       port: config.smtp.port,
       secure: config.smtp.secure,
-      auth: { user: config.smtp.user, pass: config.smtp.pass }
+      auth: { user: config.smtp.user, pass: config.smtp.pass },
+      connectionTimeout: 15000,
+      greetingTimeout: 10000,
+      socketTimeout: 20000
     });
   }
   return transporter;
 }
 
 export function isMailConfigured() {
-  return config.smtp.configured;
+  return config.resend.configured || config.smtp.configured;
+}
+
+async function sendViaResend({ to, subject, text, html }) {
+  let response;
+  try {
+    response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${config.resend.apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: config.resend.from,
+        to: [to],
+        subject,
+        text,
+        html
+      }),
+      signal: AbortSignal.timeout(RESEND_TIMEOUT_MS)
+    });
+  } catch (err) {
+    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+      throw new Error(`Resend request timed out after ${RESEND_TIMEOUT_MS / 1000} seconds`);
+    }
+    throw new Error(`Resend request failed: ${err.message}`);
+  }
+
+  if (!response.ok) {
+    let message = `Resend request failed (${response.status})`;
+    try {
+      const data = await response.json();
+      if (data?.message) message = `Resend: ${data.message}`;
+    } catch {
+      /* ignore */
+    }
+    throw new Error(message);
+  }
+
+  const data = await response.json().catch(() => ({}));
+  return { delivered: true, provider: 'resend', messageId: data.id };
 }
 
 export async function sendMail({ to, subject, text, html }) {
+  if (config.resend.configured) {
+    return sendViaResend({ to, subject, text, html });
+  }
+
   const transport = getTransporter();
   if (!transport) {
     if (config.mailDevConsoleFallback && !config.isProduction) {
       if (!config.isTest) {
         logger.warn(
-          `[email:dev] SMTP not configured. Message not sent.\n  To: ${to}\n  Subject: ${subject}\n  Body:\n${text}`
+          `[email:dev] Email is not configured. Message not sent.\n  To: ${to}\n  Subject: ${subject}\n  Body:\n${text}`
         );
       }
       return { delivered: false, dev: true };
     }
-    throw new Error('Email service is not configured. Set SMTP_* environment variables.');
+    throw new Error(
+      'Email service is not configured. Set RESEND_API_KEY or SMTP_* environment variables.'
+    );
   }
   const info = await transport.sendMail({
     from: config.smtp.from,
@@ -41,7 +92,7 @@ export async function sendMail({ to, subject, text, html }) {
     text,
     html
   });
-  return { delivered: true, messageId: info.messageId };
+  return { delivered: true, provider: 'smtp', messageId: info.messageId };
 }
 
 export async function sendLoginCodeEmail({ user, code, expiresMinutes, ip }) {

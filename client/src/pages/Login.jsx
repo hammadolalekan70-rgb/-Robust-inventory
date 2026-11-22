@@ -247,7 +247,7 @@ export default function Login() {
       </div>
 
       <div className="relative hidden overflow-hidden bg-brand lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(242,160,7,0.22),_transparent_50%)]" />
+        <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_right,_rgba(245,158,11,0.22),_transparent_50%)]" />
         <div className="relative">
           <div className="flex items-center gap-3">
             <span className="flex h-12 w-12 items-center justify-center rounded-2xl bg-white/10 ring-1 ring-white/20">
@@ -261,7 +261,7 @@ export default function Login() {
           <h2 className="mt-14 max-w-md text-3xl font-bold leading-snug text-white">
             Purchasing records you can trust, from the loading bay to the boardroom.
           </h2>
-          <ul className="mt-8 space-y-3 text-sm text-blue-100">
+          <ul className="mt-8 space-y-3 text-sm text-slate-100">
             {[
               'Record purchases with receipts attached',
               'Track product price changes over time',
@@ -275,7 +275,7 @@ export default function Login() {
             ))}
           </ul>
         </div>
-        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-blue-100">
+        <div className="relative rounded-2xl border border-white/10 bg-white/5 p-4 text-xs text-slate-100">
           <p className="flex items-center gap-2 font-semibold text-white">
             <LockKeyhole className="h-4 w-4 text-accent" />
             Secure by default

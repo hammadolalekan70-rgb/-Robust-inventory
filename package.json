@@ -12,7 +12,8 @@
     "build": "npm run build -w client",
     "start": "npm run start -w server",
     "test": "npm run test -w server",
-    "create-admin": "node server/src/scripts/createAdmin.js"
+    "create-admin": "node server/src/scripts/createAdmin.js",
+    "login-report": "node server/src/scripts/loginReport.js"
   },
   "devDependencies": {
     "concurrently": "^9.1.0"

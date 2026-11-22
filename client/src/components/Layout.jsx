@@ -128,13 +128,13 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <aside className="fixed inset-y-0 left-0 z-30 w-40 border-r border-slate-200 lg:w-72">
+    <div className="min-h-screen bg-canvas">
+      <aside className="fixed inset-y-0 left-0 z-30 w-40 border-r border-line shadow-[1px_0_0_rgba(57,54,95,0.04)] lg:w-72">
         <Sidebar />
       </aside>
 
       <div className="pl-40 lg:pl-72">
-        <header className="sticky top-0 z-20 border-b border-slate-200 bg-white/90 backdrop-blur">
+        <header className="sticky top-0 z-20 border-b border-line bg-white/90 backdrop-blur">
           <div className="mx-auto flex h-16 w-full max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 lg:px-8">
             <div className="flex items-center gap-3">
               <div className="hidden lg:block">
@@ -209,7 +209,7 @@ export default function Layout() {
 
         <main className="mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
           <Outlet />
-          <footer className="mt-10 border-t border-slate-200 pt-4 text-xs text-slate-400">
+          <footer className="mt-10 border-t border-line pt-4 text-xs text-slate-400">
             © {new Date().getFullYear()} Robust Warehouse Inventory
           </footer>
         </main>

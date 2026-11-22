@@ -54,6 +54,9 @@ const schema = z.object({
   MAIL_FROM: z.string().default('Robust Warehouse Inventory <no-reply@example.com>'),
   MAIL_DEV_CONSOLE_FALLBACK: bool(true),
 
+  RESEND_API_KEY: z.string().default(''),
+  RESEND_FROM: z.string().default(''),
+
   RESET_TOKEN_TTL_MINUTES: int(30, 5, 1440)
 });
 
@@ -105,7 +108,13 @@ export const config = {
     configured: Boolean(e.SMTP_HOST && e.SMTP_USER && e.SMTP_PASS)
   },
   mailDevConsoleFallback: e.MAIL_DEV_CONSOLE_FALLBACK,
-  resetTokenTtlMinutes: e.RESET_TOKEN_TTL_MINUTES
+  resetTokenTtlMinutes: e.RESET_TOKEN_TTL_MINUTES,
+
+  resend: {
+    apiKey: e.RESEND_API_KEY,
+    from: e.RESEND_FROM || e.MAIL_FROM,
+    configured: Boolean(e.RESEND_API_KEY)
+  }
 };
 
 process.env.TZ = config.tz;

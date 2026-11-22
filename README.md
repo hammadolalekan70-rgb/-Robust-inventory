@@ -60,9 +60,10 @@ node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
 
 The default database is `mongodb://127.0.0.1:27017/robust_warehouse_inventory`.
 
-Sign-in requires a 6-digit code sent by email, so configure `SMTP_*` before logging in. With Gmail, use an
-App Password as `SMTP_PASS`; see [docs/EMAIL.md](docs/EMAIL.md). In development, a missing SMTP setup logs
-the code to the server console instead of failing.
+Sign-in requires a 6-digit code sent by email, so configure an email provider before logging in. Use
+`RESEND_API_KEY` (HTTPS, recommended where SMTP is blocked, such as Render's free plan) or `SMTP_*` with a
+Gmail App Password; see [docs/EMAIL.md](docs/EMAIL.md). In development, a missing setup logs the code to
+the server console instead of failing.
 
 ### 3. Create the first boss account
 

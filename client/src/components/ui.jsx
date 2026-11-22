@@ -62,7 +62,7 @@ export function Button({
 export function Card({ className, children, ...props }) {
   return (
     <section
-      className={cn('rounded-2xl border border-slate-200 bg-white shadow-sm', className)}
+      className={cn('rounded-2xl border border-line bg-white shadow-sm', className)}
       {...props}
     >
       {children}
@@ -74,7 +74,7 @@ export function CardHeader({ title, description, actions, className }) {
   return (
     <div
       className={cn(
-        'flex flex-col gap-3 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-center sm:justify-between',
+        'flex flex-col gap-3 border-b border-line px-5 py-4 sm:flex-row sm:items-center sm:justify-between',
         className
       )}
     >
@@ -126,7 +126,7 @@ export function Textarea({ className, rows = 3, ...props }) {
 
 const BADGE_TONES = {
   neutral: 'bg-slate-100 text-slate-700 ring-slate-200',
-  brand: 'bg-brand-soft text-brand ring-blue-100',
+  brand: 'bg-steel/10 text-steel ring-slate-200',
   accent: 'bg-amber-50 text-amber-800 ring-amber-200',
   success: 'bg-emerald-50 text-emerald-700 ring-emerald-200',
   warning: 'bg-amber-50 text-amber-800 ring-amber-200',
@@ -341,13 +341,14 @@ export function Skeleton({ className }) {
 
 export function StatCard({ label, value, sub, icon: Icon, tone = 'brand' }) {
   const tones = {
-    brand: 'bg-brand-soft text-brand',
-    accent: 'bg-amber-50 text-amber-700',
-    emerald: 'bg-emerald-50 text-emerald-700',
-    violet: 'bg-violet-50 text-violet-700'
+    brand: 'bg-steel/10 text-steel group-hover:bg-brand group-hover:text-white',
+    accent: 'bg-accent/15 text-amber-700 group-hover:bg-accent group-hover:text-brand',
+    emerald: 'bg-brand/10 text-brand group-hover:bg-brand group-hover:text-white',
+    violet: 'bg-steel/10 text-steel group-hover:bg-brand group-hover:text-white'
   };
   return (
-    <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
+    <div className="group relative overflow-hidden rounded-2xl border border-line bg-white p-5 shadow-sm transition duration-300 hover:-translate-y-1 hover:border-steel/30 hover:shadow-xl">
+      <span className="absolute inset-x-0 top-0 h-1 bg-accent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       <div className="flex items-start justify-between gap-3">
         <div>
           <p className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</p>
@@ -355,7 +356,12 @@ export function StatCard({ label, value, sub, icon: Icon, tone = 'brand' }) {
           {sub ? <p className="mt-1 text-xs text-slate-500">{sub}</p> : null}
         </div>
         {Icon ? (
-          <div className={cn('flex h-10 w-10 items-center justify-center rounded-xl', tones[tone])}>
+          <div
+            className={cn(
+              'flex h-10 w-10 items-center justify-center rounded-xl transition duration-300',
+              tones[tone]
+            )}
+          >
             <Icon className="h-5 w-5" />
           </div>
         ) : null}

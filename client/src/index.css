@@ -1,12 +1,22 @@
 @import "tailwindcss";
 
 @theme {
-  --color-brand: #0e2e4a;
-  --color-brand-light: #16405f;
+  /* Homepage palette */
+  --color-canvas: #f4f6f8;
+  --color-field: #f8fafc;
+  --color-line: #e2e8f0;
+  --color-steel: #315b7d;
+
+  --color-brand: #142b45;
+  --color-brand-light: #1f3d5c;
   --color-brand-dark: #081f33;
   --color-brand-soft: #e8eef4;
-  --color-accent: #f2a007;
-  --color-accent-soft: #fdf2dc;
+  --color-accent: #f59e0b;
+  --color-accent-soft: #fef3c7;
+
+  /* Headings share the homepage navy */
+  --color-slate-900: #142b45;
+
   --font-sans: "Segoe UI", system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif;
 }
 
@@ -16,11 +26,11 @@
   }
 
   body {
-    @apply bg-slate-50 font-sans text-slate-800 antialiased;
+    @apply bg-canvas font-sans text-slate-800 antialiased;
   }
 
   ::selection {
-    @apply bg-accent/30;
+    @apply bg-accent/30 text-brand-dark;
   }
 
   input,
@@ -45,7 +55,7 @@
   }
 
   .table-base thead th {
-    @apply whitespace-nowrap border-b border-slate-200 bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500;
+    @apply whitespace-nowrap border-b border-line bg-slate-50 px-4 py-3 text-xs font-semibold uppercase tracking-wide text-slate-500;
   }
 
   .table-base tbody td {

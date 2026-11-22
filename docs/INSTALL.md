@@ -12,8 +12,8 @@ This guide takes a clean machine to a working development installation. For prod
 | MongoDB | 7.x; local service or a connection string |
 | OS | Windows, macOS or Linux |
 
-Optional: an SMTP account (e.g. Gmail App Password) for password-reset emails. Without it, reset links
-are printed to the server console in development.
+Optional: an email provider for sign-in codes and password-reset emails — Resend (HTTPS API) or SMTP
+(e.g. Gmail App Password). Without one, messages are printed to the server console in development.
 
 ### Confirm your tools
 
@@ -89,7 +89,9 @@ SESSION_SECRET=<64 hex value>
 | `SMTP_HOST` / `SMTP_PORT` / `SMTP_SECURE` | `smtp.gmail.com` / `587` / `false` | Mail transport |
 | `SMTP_USER` / `SMTP_PASS` | — | SMTP credentials |
 | `MAIL_FROM` | `Robust Warehouse Inventory <no-reply@example.com>` | From header |
-| `MAIL_DEV_CONSOLE_FALLBACK` | `true` | Log reset links when SMTP is unconfigured |
+| `RESEND_API_KEY` | — | Resend API key; enables HTTPS email |
+| `RESEND_FROM` | `MAIL_FROM` | Verified Resend sender address |
+| `MAIL_DEV_CONSOLE_FALLBACK` | `true` | Log messages when no email provider is configured |
 | `RESET_TOKEN_TTL_MINUTES` | `30` | Password-reset token lifetime |
 
 Directories are resolved relative to the repository root, regardless of the shell's working directory.
@@ -155,7 +157,7 @@ It creates its own boss (`boss@test.local`) and staff accounts — it does not r
 | Port 4000 or 5173 already in use | Stop the other process or change `PORT` (and the Vite proxy target if needed). |
 | `Invalid or missing CSRF token` | Access the app through the same origin (Vite proxy or production server) and clear stale cookies. |
 | Login returns “Invalid email or password” | Confirm the account exists and is active. Boss can reset the password from **Users**. |
-| Reset email never arrives | Check `SMTP_*`; see [EMAIL.md](EMAIL.md). In development the reset link is printed in the server console when SMTP is not configured. |
+| Reset email never arrives | Check `RESEND_*` or `SMTP_*`; see [EMAIL.md](EMAIL.md). In development the message is printed in the server console when no provider is configured. |
 | Attachment rejected | Only JPEG/PNG/WebP/PDF up to 5 MB, max 5 per purchase. The content must match its declared type. |
 | Tests fail to connect | MongoDB must be reachable and `MONGODB_TEST_URI` must point to a disposable database. |
 
