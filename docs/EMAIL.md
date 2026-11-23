@@ -5,7 +5,8 @@ The application sends two kinds of mail: a **6-digit sign-in code** after a corr
 attempts. User creation and password changes done by a boss do not send email. If no email provider is
 configured, both flows still work in development by printing the message to the server console.
 
-Two providers are supported: **Resend** (HTTPS API) and **SMTP**. Resend takes priority when configured.
+Three providers are supported: **Resend** (HTTPS API), a **Gmail relay** (Google Apps Script over
+HTTPS) and **SMTP**. Priority is Gmail relay, then Resend, then SMTP.
 
 ---
 
@@ -28,7 +29,55 @@ RESEND_FROM="Robust Warehouse Inventory <no-reply@yourdomain.com>"
 `RESEND_FROM` must be an address on a domain verified in Resend. If it is empty, `MAIL_FROM` is used.
 Restart the API after changing the variables.
 
-When `RESEND_API_KEY` is set, Resend is used for every email and the `SMTP_*` settings are ignored.
+When `RESEND_API_KEY` is set (and the Gmail relay is not), Resend is used for every email and SMTP is
+ignored.
+
+---
+
+## Gmail relay (free, sends to any recipient, no domain)
+
+Use this when the host blocks SMTP ports and you do not have a verified sending domain. A small
+Google Apps Script runs under a Gmail account and sends the message over HTTPS (port 443). Unlike
+Resend's test sender, it can email any recipient, and each user receives their own code.
+
+1. Open <https://script.google.com> → **New project**.
+2. Paste this script, replacing the secret with a long random string:
+
+```js
+const SECRET = 'replace-with-a-long-random-secret';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (!data || data.secret !== SECRET) {
+      return ContentService.createTextOutput('unauthorized');
+    }
+    if (!data.to || !data.subject) {
+      return ContentService.createTextOutput('bad request');
+    }
+    const options = { name: 'Robust Warehouse Inventory' };
+    if (data.html) options.htmlBody = data.html;
+    GmailApp.sendEmail(data.to, data.subject, data.text || '', options);
+    return ContentService.createTextOutput('ok');
+  } catch (err) {
+    return ContentService.createTextOutput('error: ' + err.message);
+  }
+}
+```
+
+3. **Deploy → New deployment → Web app**. Set **Execute as: Me** and **Who has access: Anyone**.
+   Authorize Gmail access, then copy the Web App URL (ends in `/exec`).
+4. Configure:
+
+```dotenv
+GMAIL_RELAY_URL=https://script.google.com/macros/s/xxxx/exec
+GMAIL_RELAY_SECRET=the-same-secret
+```
+
+5. Restart the API. The URL and secret are sensitive — treat them like a password.
+
+The relay uses the Gmail account's daily sending limit (about 100 recipients/day for free Gmail).
+When the relay is configured it takes priority over Resend and SMTP.
 
 ---
 
@@ -98,12 +147,15 @@ credentials (not IAM access keys).
 | `MAIL_FROM` | From header; use `"Name <address>"` |
 | `RESEND_API_KEY` | Resend API key; enables the HTTPS email API |
 | `RESEND_FROM` | Verified Resend sender; defaults to `MAIL_FROM` |
+| `GMAIL_RELAY_URL` | Apps Script web app URL; enables the Gmail relay |
+| `GMAIL_RELAY_SECRET` | Shared secret matching the Apps Script |
 | `MAIL_DEV_CONSOLE_FALLBACK` | When no provider is configured, log the message instead of failing (development only) |
 | `APP_BASE_URL` | Origin used to build the reset link; must be the public URL in production |
 | `RESET_TOKEN_TTL_MINUTES` | Link lifetime (default 30) |
 
-Email is considered configured when `RESEND_API_KEY` is set, or when `SMTP_HOST`, `SMTP_USER` and
-`SMTP_PASS` are all set. Resend wins when both are configured.
+Email is considered configured when `GMAIL_RELAY_URL` and `GMAIL_RELAY_SECRET` are set, when
+`RESEND_API_KEY` is set, or when `SMTP_HOST`, `SMTP_USER` and `SMTP_PASS` are all set. Priority is
+Gmail relay, then Resend, then SMTP.
 
 ### Reset link
 
@@ -198,6 +250,7 @@ installed.
 | Sign-in button spins for minutes | SMTP connection is hanging. Check logs for `Failed to send sign-in code`; on Render free, SMTP ports are blocked. |
 | `self-signed certificate` | Corporate SMTP proxy; use a trusted endpoint or ask IT. |
 | `Resend: ...` error | Check `RESEND_API_KEY` and that `RESEND_FROM` uses a domain verified in Resend. |
+| `Gmail relay rejected the message` | Check the URL and secret, and that the deployment is accessible to **Anyone**. Redeploy the Apps Script after edits. |
 | Email lands in spam | Use a domain sender with SPF/DKIM, keep `MAIL_FROM` aligned with the sending account, avoid spammy subjects. |
 | Link points to localhost in production | Fix `APP_BASE_URL` and restart the API. |
 | Link says invalid/expired | Tokens last 30 minutes and are single-use; request a new one. |

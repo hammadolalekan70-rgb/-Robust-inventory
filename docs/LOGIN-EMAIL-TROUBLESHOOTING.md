@@ -26,9 +26,9 @@ never opens.
 - In production the development console fallback is disabled
   (`server/src/config/env.js`, `MAIL_DEV_CONSOLE_FALLBACK` only applies when
   `NODE_ENV !== production`).
-- If neither `RESEND_API_KEY` nor `SMTP_HOST` + `SMTP_USER` + `SMTP_PASS` is
-  set, `sendMail` throws and the API returns
-  `503 EMAIL_UNAVAILABLE` (`server/src/services/emailService.js`).
+- If none of `GMAIL_RELAY_URL` + `GMAIL_RELAY_SECRET`, `RESEND_API_KEY`, or
+  `SMTP_HOST` + `SMTP_USER` + `SMTP_PASS` is set, `sendMail` throws and the
+  API returns `503 EMAIL_UNAVAILABLE` (`server/src/services/emailService.js`).
 - Render free web services block outbound SMTP ports **25, 465 and 587**, so
   Gmail SMTP cannot work there.
 
@@ -154,6 +154,52 @@ Caveats:
   some messages may not be delivered.
 - Keep `RESEND_API_KEY` empty so SMTP is used.
 
+## Option D - Gmail relay via Google Apps Script (free, no domain)
+
+Sends as a real Gmail account over HTTPS (port 443), so it works on Render free
+and can email any recipient. Each user still receives their own code.
+
+1. Open <https://script.google.com> → **New project**.
+2. Paste this script, replacing the secret with a long random string:
+
+```js
+const SECRET = 'replace-with-a-long-random-secret';
+
+function doPost(e) {
+  try {
+    const data = JSON.parse(e.postData.contents);
+    if (!data || data.secret !== SECRET) {
+      return ContentService.createTextOutput('unauthorized');
+    }
+    if (!data.to || !data.subject) {
+      return ContentService.createTextOutput('bad request');
+    }
+    const options = { name: 'Robust Warehouse Inventory' };
+    if (data.html) options.htmlBody = data.html;
+    GmailApp.sendEmail(data.to, data.subject, data.text || '', options);
+    return ContentService.createTextOutput('ok');
+  } catch (err) {
+    return ContentService.createTextOutput('error: ' + err.message);
+  }
+}
+```
+
+3. **Deploy → New deployment → Web app**, with **Execute as: Me** and
+   **Who has access: Anyone**. Authorize Gmail, then copy the `/exec` URL.
+4. Render → Environment:
+
+```dotenv
+GMAIL_RELAY_URL=https://script.google.com/macros/s/xxxx/exec
+GMAIL_RELAY_SECRET=the-same-secret
+```
+
+5. Redeploy. The URL and secret are sensitive; treat them like a password.
+
+Caveats:
+
+- Free Gmail sends about 100 recipients/day — enough for login codes.
+- When both are configured, the relay takes priority over Resend.
+
 ## SMS one-time codes
 
 SMS OTP is possible to implement but is not free for real users:
@@ -191,7 +237,8 @@ limitation.
 ## Checklist
 
 - [ ] Live boss account exists in the production database.
-- [ ] `RESEND_API_KEY` set (or `SMTP_*` for Mailjet port 2525).
+- [ ] `GMAIL_RELAY_URL` + `GMAIL_RELAY_SECRET` set (or `RESEND_API_KEY` with a
+      verified domain, or `SMTP_*` for Mailjet port 2525).
 - [ ] `RESEND_FROM` uses a verified domain (or a verified Mailjet sender).
 - [ ] Render environment saved and redeployed.
 - [ ] Render logs show no `Failed to send sign-in code` or `Resend:` errors.

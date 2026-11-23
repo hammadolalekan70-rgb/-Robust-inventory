@@ -50,3 +50,7 @@ services:
         sync: false
       - key: RESEND_FROM
         sync: false
+      - key: GMAIL_RELAY_URL
+        sync: false
+      - key: GMAIL_RELAY_SECRET
+        sync: false

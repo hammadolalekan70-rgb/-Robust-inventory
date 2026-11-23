@@ -5,6 +5,7 @@ import { logger } from '../lib/logger.js';
 let transporter = null;
 
 const RESEND_TIMEOUT_MS = 15000;
+const GMAIL_RELAY_TIMEOUT_MS = 15000;
 
 function getTransporter() {
   if (!config.smtp.configured) return null;
@@ -23,7 +24,7 @@ function getTransporter() {
 }
 
 export function isMailConfigured() {
-  return config.resend.configured || config.smtp.configured;
+  return config.resend.configured || config.gmailRelay.configured || config.smtp.configured;
 }
 
 async function sendViaResend({ to, subject, text, html }) {
@@ -66,7 +67,45 @@ async function sendViaResend({ to, subject, text, html }) {
   return { delivered: true, provider: 'resend', messageId: data.id };
 }
 
+async function sendViaGmailRelay({ to, subject, text, html }) {
+  let response;
+  try {
+    response = await fetch(config.gmailRelay.url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        secret: config.gmailRelay.secret,
+        to,
+        subject,
+        text,
+        html
+      }),
+      signal: AbortSignal.timeout(GMAIL_RELAY_TIMEOUT_MS)
+    });
+  } catch (err) {
+    if (err.name === 'AbortError' || err.name === 'TimeoutError') {
+      throw new Error(
+        `Gmail relay request timed out after ${GMAIL_RELAY_TIMEOUT_MS / 1000} seconds`
+      );
+    }
+    throw new Error(`Gmail relay request failed: ${err.message}`);
+  }
+
+  const body = (await response.text().catch(() => '')).trim();
+  if (!response.ok || (body && body !== 'ok')) {
+    throw new Error(
+      `Gmail relay rejected the message (${response.status}): ${body.slice(0, 200) || 'empty response'}`
+    );
+  }
+
+  return { delivered: true, provider: 'gmail-relay' };
+}
+
 export async function sendMail({ to, subject, text, html }) {
+  if (config.gmailRelay.configured) {
+    return sendViaGmailRelay({ to, subject, text, html });
+  }
+
   if (config.resend.configured) {
     return sendViaResend({ to, subject, text, html });
   }
@@ -82,7 +121,7 @@ export async function sendMail({ to, subject, text, html }) {
       return { delivered: false, dev: true };
     }
     throw new Error(
-      'Email service is not configured. Set RESEND_API_KEY or SMTP_* environment variables.'
+      'Email service is not configured. Set GMAIL_RELAY_URL + GMAIL_RELAY_SECRET, RESEND_API_KEY, or SMTP_* environment variables.'
     );
   }
   const info = await transport.sendMail({

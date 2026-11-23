@@ -57,6 +57,9 @@ const schema = z.object({
   RESEND_API_KEY: z.string().default(''),
   RESEND_FROM: z.string().default(''),
 
+  GMAIL_RELAY_URL: z.string().default(''),
+  GMAIL_RELAY_SECRET: z.string().default(''),
+
   RESET_TOKEN_TTL_MINUTES: int(30, 5, 1440)
 });
 
@@ -114,6 +117,12 @@ export const config = {
     apiKey: e.RESEND_API_KEY,
     from: e.RESEND_FROM || e.MAIL_FROM,
     configured: Boolean(e.RESEND_API_KEY)
+  },
+
+  gmailRelay: {
+    url: e.GMAIL_RELAY_URL,
+    secret: e.GMAIL_RELAY_SECRET,
+    configured: Boolean(e.GMAIL_RELAY_URL && e.GMAIL_RELAY_SECRET)
   }
 };
 
